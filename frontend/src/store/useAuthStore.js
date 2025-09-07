@@ -21,8 +21,8 @@ export const useAuthStore = create((set, get) => ({
       set({ authUser: res.data });
       get().connectSocket();
     } catch (error) {
-      console.log("Error in checkAuth:", error);
-      set({ authUser: null });
+      const message = error.response?.data?.message || error.response?.data?.error || error.message;
+      toast.error(message);
     } finally {
       set({ isCheckingAuth: false });
     }
@@ -36,7 +36,8 @@ export const useAuthStore = create((set, get) => ({
       toast.success("Account created successfully");
       get().connectSocket();
     } catch (error) {
-      toast.error(error.response.data.message);
+      const message = error.response?.data?.message || error.response?.data?.error || error.message;
+      toast.error(message);
     } finally {
       set({ isSigningUp: false });
     }
@@ -51,7 +52,8 @@ export const useAuthStore = create((set, get) => ({
 
       get().connectSocket();
     } catch (error) {
-      toast.error(error.response.data.message);
+      const message = error.response?.data?.message || error.response?.data?.error || error.message;
+      toast.error(message);
     } finally {
       set({ isLoggingIn: false });
     }
@@ -64,7 +66,8 @@ export const useAuthStore = create((set, get) => ({
       toast.success("Logged out successfully");
       get().disconnectSocket();
     } catch (error) {
-      toast.error(error.response.data.message);
+      const message = error.response?.data?.message || error.response?.data?.error || error.message;
+      toast.error(message);
     }
   },
 
@@ -75,8 +78,8 @@ export const useAuthStore = create((set, get) => ({
       set({ authUser: res.data });
       toast.success("Profile updated successfully");
     } catch (error) {
-      console.log("error in update profile:", error);
-      toast.error(error.response.data.message);
+      const message = error.response?.data?.message || error.response?.data?.error || error.message;
+      toast.error(message);
     } finally {
       set({ isUpdatingProfile: false });
     }
@@ -87,13 +90,13 @@ export const useAuthStore = create((set, get) => ({
     if (!authUser || get().socket?.connected) return;
 
     const socket = io(BASE_URL, {
+      withCredentials: true, // 👈 this ensures cookies (jwt) are sent
       query: {
         userId: authUser._id,
       },
     });
-    socket.connect();
 
-    set({ socket: socket });
+    set({ socket });
 
     socket.on("getOnlineUsers", (userIds) => {
       set({ onlineUsers: userIds });
